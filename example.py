@@ -8,6 +8,7 @@ from datetime import datetime
 nlinhas = 0
 nacumulado_fonte = 0
 num = 0
+lcoment_aberto = False
 
 wb = xlwt.Workbook()
 ws = wb.add_sheet('Fontes')
@@ -19,7 +20,7 @@ ws.write(0, 3, "Acumulado por fonte",style0)
 ws.write(0, 4, "Caminho",style0)
 nwrite = 1
 
-for subdir, dirs, files in os.walk("C:\workspace\Fontes\Testeta"):
+for subdir, dirs, files in os.walk("C:\\workspace\\Fontes\\Materiais"):
     for file in files:
         #print os.path.join(subdir, file)
         filepath = subdir + os.sep + file
@@ -31,11 +32,36 @@ for subdir, dirs, files in os.walk("C:\workspace\Fontes\Testeta"):
                 atext = text.split("\n")
                 print(file)
                 for at in range(0,len(atext)):
-                    if atext[at].strip() != '' or atext[at].replace('\t','').strip().startswith('//'):
-                        if atext[at].count("\t") == num:
+                    if '/*' in atext[at] or lcoment_aberto:  # se tem comentario de bloco
+                        lcoment_aberto = True
+                        if '*/' in atext[at]:
+                            lcoment_aberto = False
+                        continue
+                    if atext[at].strip() != '' and \
+                            not (atext[at].replace('\t','').strip().startswith('//')):
+
+                        ctext_cleaned = atext[at].replace('\t','').strip().upper()
+                        if not (ctext_cleaned.startswith('FUNCTION') or
+                                ctext_cleaned.startswith('WHILE ') or
+                                ctext_cleaned.startswith('IF ') or
+                                ctext_cleaned.startswith('ELSE') or
+                                ctext_cleaned.startswith('ENDIF') or
+                                ctext_cleaned.startswith('ENDDO') or
+                                ctext_cleaned.startswith('FOR ') or
+                                ctext_cleaned.startswith('DO CASE') or
+                                ctext_cleaned.startswith('CASE ') or
+                                ctext_cleaned.startswith('RETURN') or
+                                ctext_cleaned.startswith('FUNCTION ') or
+                                ctext_cleaned.startswith('STATIC FUNCTION ') or
+                                ctext_cleaned.startswith('NEXT') or
+                                ctext_cleaned.startswith('CLASS ') or
+                                ctext_cleaned.startswith('METHOD ') or
+                                ctext_cleaned.startswith('WSMETHOD ') or
+                                ctext_cleaned.startswith('WSSTRUCT ') or
+                                ctext_cleaned.startswith('USER FUNCTION ')):
                             nlinhas = nlinhas + 1
                         else:
-                            if nlinhas > 10:
+                            if nlinhas > 20:
                                 ws.write(nwrite, 0, nlinhas)
                                 ws.write(nwrite, 1, at)
                                 ws.write(nwrite, 2, file)
